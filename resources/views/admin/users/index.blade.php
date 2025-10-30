@@ -6,7 +6,7 @@
         <div class="container-fluid mt-5">
             <div class="d-flex justify-content-center">
                 <div class="card shadow-lg w-100" style="max-width: 1200px;">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header text-white" style="background:#1e1e2d;">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">Users Management</h4>
                             <a href="{{ route('users.create') }}" class="btn btn-light">
@@ -47,6 +47,7 @@
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i>
+                                                    
                                                 </a>
                                                 <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i>

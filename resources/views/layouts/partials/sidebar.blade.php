@@ -24,7 +24,7 @@
 
     @auth
         <!-- ADMIN-ONLY SECTIONS (Hidden from Manager) -->
-        @if(auth()->user()->role->name === 'admin')
+        @if(auth()->user()->role->name === 'Admin')
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseWaste">
                     <i class="fas fa-file"></i>
@@ -78,7 +78,7 @@
         @endif
 
         <!-- POS SECTION (Visible to ALL ROLES) -->
-        <li class="nav-item">
+        {{-- <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapspos">
                 <i class="fas fa-store-slash"></i>
                 <span>POS</span>
@@ -96,7 +96,7 @@
                     @endif
                 </div>
             </div>
-        </li>
+        </li> --}}
     @endauth
 
     <!-- Divider -->

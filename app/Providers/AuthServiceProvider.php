@@ -11,10 +11,9 @@ class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         User::class => UserPolicy::class, // Link User model to UserPolicy
-         Category::class => CategoryPolicy::class,
+        Category::class => CategoryPolicy::class,
+        Device::class => DevicePolicy::class,  // Link device model to DevicePolicy
     ];
-
-    
 
 
     public function boot(): void
@@ -34,21 +33,23 @@ class AuthServiceProvider extends ServiceProvider
             return $user->isAdmin(); // Example: Only admins can create users
         });
 
-             Gate::define('view-categories', function (User $user) {
+          Gate::define('create-issueCategories', function (User $user) {
             return $user->isAdmin(); // Example: Only admins can create users
         });
 
-
-           // gate for product management
-        Gate::define('manage-products', function ($user) {
-        return in_array($user->role->name, ['admin', 'manager']);
-
-    });
-
+             Gate::define('view-categories', function (User $user) {
+            return $user->isAdmin(); // Example: Only admins can create users
+        });
 
      // Define your gates here if needed
         Gate::define('manage-users', function ($user) {
             return $user->isAdmin(); // Adjust according to your user model
         });
+
+
+         Gate::define('manage-devices', function ($user) {
+         return in_array($user->role->name, ['Admin', 'HelpDesk']);
+        });
+        
     }
 }

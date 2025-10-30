@@ -21,7 +21,32 @@
             <!-- SweetAlert Script -->
              <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
+        <style>
+            body {
+                background-image: url('https://cdn.pixabay.com/photo/2018/07/30/11/20/iphone-3572340_1280.jpg');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                min-height: 100vh;
+            }
+            
+            #content-wrapper {
+                /* background-color: rgba(255, 255, 255, 0.9); */
+                border-radius: 10px;
+                margin: 20px;
+                /* box-shadow: 0 0 20px rgba(0, 0, 0, 0.2); */
+            }
+            
+            @media (max-width: 768px) {
+                body {
+                    background-attachment: scroll;
+                }
+                #content-wrapper {
+                    margin: 10px;
+                }
+            }
+        </style>
     </head>
     <body id="page-top">
      <div id="content-wrapper" class="d-flex flex-column mt-5">
@@ -54,4 +79,3 @@
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     </body>
     </html>
-       

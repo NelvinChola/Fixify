@@ -19,6 +19,11 @@ class DatabaseSeeder extends Seeder
              AdminUserSeeder::class,
             ]);
 
+            $this->call([
+            IssueCategoriesSeeder::class,
+            DeviceIssueSeeder::class,
+]);
+
         // User::factory(10)->create();
 
         // User::factory()->create([

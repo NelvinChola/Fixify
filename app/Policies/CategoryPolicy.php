@@ -10,21 +10,21 @@ class CategoryPolicy
 {
 public function viewAny(User $user)
 {
-    return $user->role->name === 'admin';
+    return $user->role->name === 'Admin';
 }
 
 public function create(User $user)
 {
-    return $user->role->name === 'admin';
+    return $user->role->name === 'Admin';
 }
 
 public function update(User $user, Category $category)
 {
-    return $user->role->name === 'admin';
+    return $user->role->name === 'Admin';
 }
 
 public function delete(User $user, Category $category)
 {
-    return $user->role->name === 'admin';
+    return $user->role->name === 'Admin';
 }
 }
