@@ -75,19 +75,19 @@ class JobCardController extends Controller
         $userRole = $user->role;
         $roleName = is_object($userRole) ? strtolower($userRole->name) : strtolower($userRole);
         
-        $request = ServiceRequest::with(['device', 'customer', 'technician'])->findOrFail($id);
+        $request = ServiceRequest::with(['device', 'Customer', 'Technician'])->findOrFail($id);
 
         // If user is technician, check if they are assigned to this job card
-        if ($roleName === 'technician' && $request->technician_id !== $user->id) {
+        if ($roleName === 'Technician' && $request->technician_id !== $user->id) {
             abort(403, 'You are not authorized to view this job card.');
         }
 
         // Get all technicians (you can filter by role)
         $technicians = User::whereHas('role', function ($q) {
-            $q->where('name', 'technician');
+            $q->where('name', 'Technician');
         })->get();
 
-        return view('JobCard.show', compact('request', 'technicians'));
+        return view('JobCard.show', compact('request', 'Technicians'));
     }
 
     public function updateStatus(Request $request, $id)
