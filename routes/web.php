@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Auth\logoutController;
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\DeviceIssueCategoryController;
 use Illuminate\Support\Facades\Route;
