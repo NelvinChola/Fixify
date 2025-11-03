@@ -77,7 +77,6 @@ class JobCardController extends Controller
         
         $request = ServiceRequest::with(['device', 'customer', 'technician'])->findOrFail($id);
 
-        dd($roleName);
         // If user is technician, check if they are assigned to this job card
         if ($roleName === 'technician' && $request->technician_id !== $user->id) {
             abort(403, 'You are not authorized to view this job card.');
