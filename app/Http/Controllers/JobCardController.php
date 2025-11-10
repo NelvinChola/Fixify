@@ -79,14 +79,13 @@ class JobCardController extends Controller
 
 
         
-if ($roleName === 'technician' && $request->technician_id !== $user->id) {
-    dd('inside abort check'); // Add this
-    abort(403, 'You are not authorized to view this job card.');
-}
+// if ($roleName === 'technician' && $request->technician_id !== $user->id) {
+//     abort(403, 'You are not authorized to view this job card.');
+// }
 
         // Get all technicians (you can filter by role)
         $technicians = User::whereHas('role', function ($q) {
-            $q->where('name', 'Technician');
+            $q->where('name', 'technician');
         })->get();
 
         return view('JobCard.show', compact('request', 'technicians'));
