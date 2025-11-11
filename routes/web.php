@@ -76,16 +76,23 @@ Route::middleware(['auth'])->group(function () {
 
 
 // routes for helpdesk role
-// TEMPORARY: JobCard routes without authentication
-Route::get('/JobCards', [JobCardController::class, 'index'])->name('JobCard.index');
-Route::get('/JobCards/{id}', [JobCardController::class, 'show'])->name('JobCard.show');
-Route::post('/JobCards/{id}/update-status', [JobCardController::class, 'updateStatus'])->name('JobCard.update-status');
-Route::post('/JobCards/{id}/assign-technician', [JobCardController::class, 'assignTechnician'])->name('JobCard.assign-technician');
-Route::post('/job-cards/{id}/sent-back', [JobCardController::class, 'sentBack'])->name('JobCard.sent-back');
-Route::post('/job-cards/{id}/reassign-technician', [JobCardController::class, 'reassignTechnician'])->name('JobCard.reassign-technician');
-Route::post('/job-cards/{id}/archive', [JobCardController::class, 'archive'])->name('JobCard.archive');
-Route::post('/job-cards/{id}/additional-fees', [JobCardController::class, 'addAdditionalFees'])->name('JobCard.add-additional-fees');
-Route::post('/job-cards/{id}/update-payment', [JobCardController::class, 'updatePayment'])->name('JobCard.update-payment');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/JobCards', [JobCardController::class, 'index'])->name('JobCard.index');
+    Route::get('/JobCards/{id}', [JobCardController::class, 'show'])->name('JobCard.show');
+    Route::post('/JobCards/{id}/update-status', [JobCardController::class, 'updateStatus'])->name('JobCard.update-status');
+    Route::post('/JobCards/{id}/assign-technician', [JobCardController::class, 'assignTechnician'])->name('JobCard.assign-technician');
+    Route::post('/job-cards/{id}/sent-back', [JobCardController::class, 'sentBack'])->name('JobCard.sent-back');
+
+
+    Route::post('/job-cards/{id}/reassign-technician', [JobCardController::class, 'reassignTechnician'])->name('JobCard.reassign-technician');
+    Route::post('/job-cards/{id}/archive', [JobCardController::class, 'archive'])->name('JobCard.archive');
+
+    Route::post('/job-cards/{id}/additional-fees', [JobCardController::class, 'addAdditionalFees'])
+    ->name('JobCard.add-additional-fees');
+
+    Route::post('/job-cards/{id}/update-payment', [JobCardController::class, 'updatePayment'])
+    ->name('JobCard.update-payment');
+});
 
 
 //routes for setting consultation fee
