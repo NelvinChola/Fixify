@@ -83,10 +83,10 @@ class JobCardController extends Controller
 //     abort(403, 'You are not authorized to view this job card.');
 // }
 
-        // Get all technicians (you can filter by role)
-        $technicians = User::whereHas('role', function ($q) {
-            $q->where('name', 'technician');
-        })->get();
+//         // Get all technicians (you can filter by role)
+//         $technicians = User::whereHas('role', function ($q) {
+//             $q->where('name', 'technician');
+//         })->get();
 
         return view('JobCard.show', compact('request', 'technicians'));
     }
