@@ -2,58 +2,19 @@
 
 @section('content')
 @php
-    // Enhanced role detection with debugging
-    $user = auth()->user();
-    $userRole = $user->role;
+    // Role detection - moved to top for global access
+    $userRole = auth()->user()->role;
     
-    \Log::info('Role Detection Debug', [
-        'user_id' => $user->id,
-        'raw_role' => $userRole,
-        'role_type' => gettype($userRole),
-        'is_object' => is_object($userRole),
-        'is_string' => is_string($userRole)
-    ]);
-
-    // Handle different role structures
+    // If role is an object, get the name property
     if (is_object($userRole)) {
-        // If role is an object, try multiple possible property names
-        $roleName = strtolower(
-            $userRole->name ?? 
-            $userRole->role_name ?? 
-            $userRole->title ?? 
-            $userRole->type ?? 
-            'technician' // default fallback
-        );
-    } else if (is_array($userRole)) {
-        // If it's an array (unlikely but possible)
-        $roleName = strtolower($userRole['name'] ?? $userRole['role_name'] ?? 'technician');
+        $roleName = strtolower($userRole->name ?? 'admin');
     } else {
-        // If it's a string or other simple type
-        $roleName = strtolower($userRole ?? 'technician');
+        $roleName = strtolower($userRole);
     }
-
-    // Final validation and fallback
-    $validRoles = ['admin', 'helpdesk', 'technician', 'user'];
-    if (!in_array($roleName, $validRoles)) {
-        \Log::warning('Invalid role detected', [
-            'detected_role' => $roleName,
-            'user_id' => $user->id,
-            'valid_roles' => $validRoles
-        ]);
-        $roleName = 'technician'; // Safe fallback
-    }
-
+    
     $isHelpdesk = $roleName === 'helpdesk';
     $isTechnician = $roleName === 'technician';
     $displayRoleName = ucfirst($roleName);
-    
-    // Log final result for debugging
-    \Log::info('Final Role Detection', [
-        'user_id' => $user->id,
-        'final_role' => $roleName,
-        'is_technician' => $isTechnician,
-        'is_helpdesk' => $isHelpdesk
-    ]);
     
     // Define statuses where helpdesk should not see update status section
     $helpdeskHiddenStatuses = ['assigned', 'diagnosis', 'repairing', 'completed', 'unsuccessful'];

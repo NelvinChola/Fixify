@@ -69,46 +69,28 @@ class JobCardController extends Controller
         }
     }
 
-public function show($id)
-{
-    $user = Auth::user();
-    $userRole = $user->role;
-    $roleName = is_object($userRole) ? strtolower($userRole->name) : strtolower($userRole);
-    
-    $request = ServiceRequest::with(['device', 'customer', 'technician'])->findOrFail($id);
+    public function show($id)
+    {
+        $user = Auth::user();
+        $userRole = $user->role;
+        $roleName = is_object($userRole) ? strtolower($userRole->name) : strtolower($userRole);
+        
+        $request = ServiceRequest::with(['device', 'customer', 'technician'])->findOrFail($id);
 
-    \Log::info('=== JOB CARD ACCESS DEBUG ===', [
-        'user_id' => $user->id,
-        'user_id_type' => gettype($user->id),
-        'user_role' => $roleName,
-        'job_card_id' => $request->id,
-        'technician_id' => $request->technician_id,
-        'technician_id_type' => gettype($request->technician_id),
-        'is_equal' => $request->technician_id == $user->id,
-        'is_identical' => $request->technician_id === $user->id
-    ]);
 
-    dd($request->technician_id);
+        
+if ($roleName === 'technician' && $request->technician_id !== $user->id) {
+    abort(403, 'You are not authorized to view this job card.');
+}
 
-    // FIX: Use loose comparison and better debugging
-    if ($roleName === 'technician') {
-        if ($request->technician_id != $user->id) { // Use != instead of !==
-            \Log::warning('Technician access denied', [
-                'user_id' => $user->id,
-                'technician_id' => $request->technician_id,
-                'comparison' => $request->technician_id . ' != ' . $user->id
-            ]);
-            abort(403, 'Ytessssss.');
-        }
+        // Get all technicians (you can filter by role)
+        $technicians = User::whereHas('role', function ($q) {
+            $q->where('name', 'technician');
+        })->get();
+
+        return view('JobCard.show', compact('request', 'technicians'));
     }
 
-    // Get all technicians (you can filter by role)
-    $technicians = User::whereHas('role', function ($q) {
-        $q->where('name', 'technician');
-    })->get();
-
-    return view('JobCard.show', compact('request', 'technicians'));
-}
     public function updateStatus(Request $request, $id)
     {
         $user = Auth::user();

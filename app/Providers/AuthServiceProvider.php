@@ -48,7 +48,7 @@ class AuthServiceProvider extends ServiceProvider
 
 
          Gate::define('manage-devices', function ($user) {
-         return in_array($user->role->name, ['Admin', 'HelpDesk']);
+         return in_array($user->role->name, ['Admin', 'HelpDesk', 'Technician']);
         });
         
     }
