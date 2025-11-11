@@ -79,7 +79,7 @@ class JobCardController extends Controller
 
 
         
-if ($roleName === 'technician' && $request->technician_id != $user->id) {
+if ($roleName == 'technician' && $request->technician_id != $user->id) {
     abort(403, 'You are not authorized to view this job card.');
 }
 
