@@ -88,6 +88,8 @@ public function show($id)
         'is_identical' => $request->technician_id === $user->id
     ]);
 
+    dd($request->technician_id);
+
     // FIX: Use loose comparison and better debugging
     if ($roleName === 'technician') {
         if ($request->technician_id != $user->id) { // Use != instead of !==
@@ -96,7 +98,7 @@ public function show($id)
                 'technician_id' => $request->technician_id,
                 'comparison' => $request->technician_id . ' != ' . $user->id
             ]);
-            abort(403, 'You are not authorized to view this job card.');
+            abort(403, 'Ytessssss.');
         }
     }
 
