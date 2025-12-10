@@ -12,13 +12,16 @@ use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\JobCardController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JobsListController;
+use App\Http\Controllers\NotificationController;
 
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
+
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/', function () {
+//         return view('dashboard');
+//     })->name('dashboard');
+// });
 
 
 Route::middleware(['auth'])->group(function () {
@@ -92,6 +95,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/job-cards/{id}/update-payment', [JobCardController::class, 'updatePayment'])
     ->name('JobCard.update-payment');
+
+    //Route::get('/job-cards/list', [JobsListController::class, 'index'])->name('JobCard.list');
 });
 
 
@@ -128,3 +133,21 @@ Route::get('/verification-help', function () {
 
 // Dashboard Routes
 Route::get('/dashboard/welcome', [DashboardController::class, 'welcome'])->name('dashboard.welcome');
+
+
+Route::get('/job-list', [JobCardController::class, 'jobList'])->name('job.list');
+
+// routes/web.php
+Route::middleware(['auth'])->group(function() {
+    Route::get('/service-history', [App\Http\Controllers\ServiceRequestController::class, 'history'])
+         ->name('service-requests.history');
+});
+
+Route::get('/notifications/read/{id}', [App\Http\Controllers\NotificationController::class, 'markAsRead'])
+    ->name('notifications.read');
+
+Route::get('/notifications/mark-all-read', 
+    [App\Http\Controllers\NotificationController::class, 'markAllRead']
+)->name('notifications.markAllRead');
+
+

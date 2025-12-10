@@ -12,26 +12,28 @@ class UserPolicy
 
     public function viewAny(User $user)
     {
-        return $user->isAdmin();
+        return $user->isAdminOrHelpDesk();
     }
 
     public function view(User $user, User $model)
     {
-        return $user->isAdmin();
+        return $user->isAdminOrHelpDesk();
     }
 
     public function create(User $user)
     {
-        return $user->isAdmin();
+        return $user->isAdminOrHelpDesk();
     }
 
     public function update(User $user, User $model)
     {
-        return $user->isAdmin();
+        return $user->isAdminOrHelpDesk();
     }
 
     public function delete(User $user, User $model)
     {
-        return $user->isAdmin() && $user->id !== $model->id;
+        return $user->isAdminOrHelpDesk() && $user->id !== $model->id;
     }
+
+    
 }

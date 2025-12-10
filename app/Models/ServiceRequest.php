@@ -9,7 +9,7 @@ class ServiceRequest extends Model
      protected $fillable = [
         'customer_id', 'device_id', 'total_cost', 
         'status','technician_id', 'sent_back_notes',
-        'assessment_notes', 'unsuccesful_notes', 'assessed_at', 
+        'assessment_notes', 'unsuccessful_notes', 'assessed_at', 
         'unsuccessful_at', 'sent_back_at',
         'archive_reason', 'archive_notes', 'archived_at', 
         'reassign_notes', 'reassigned_at',

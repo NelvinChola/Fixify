@@ -14,12 +14,35 @@ class DashboardController extends Controller
 
         // Only calculate stats for staff members
         if (in_array($user->role->name, ['HelpDesk', 'Admin', 'Technician'])) {
-            $stats = [
-                'todayJobs' => ServiceRequest::whereDate('created_at', today())->count(),
-                'submittedJobs' => ServiceRequest::where('status', 'submitted')->count(),
-                'inProgressJobs' => ServiceRequest::whereIn('status', ['assigned', 'diagnosis', 'repairing'])->count(),
-                'completedJobs' => ServiceRequest::where('status', 'completed')->count(),
-            ];
+            
+            if ($user->role->name === 'Technician') {
+                // For Technician: Show jobs assigned to them
+                $stats = [
+                    'todayJobs' => ServiceRequest::where('technician_id', $user->id)
+                                               ->whereDate('created_at', today())
+                                               ->count(),
+                    'submittedJobs' => ServiceRequest::where('technician_id', $user->id)
+                                                   ->where('status', 'assigned')
+                                                   ->count(),
+                    'inProgressJobs' => ServiceRequest::where('technician_id', $user->id)
+                                                    ->whereIn('status', ['diagnosis', 'repairing'])
+                                                    ->count(),
+                    'completedJobs' => ServiceRequest::where('technician_id', $user->id)
+                                                   ->where('status', 'completed')
+                                                   ->whereDate('updated_at', today())
+                                                   ->count(),
+                ];
+            } else {
+                // For HelpDesk and Admin: Show all jobs completed today
+                $stats = [
+                    'todayJobs' => ServiceRequest::whereDate('created_at', today())->count(),
+                    'submittedJobs' => ServiceRequest::where('status', 'submitted')->count(),
+                    'inProgressJobs' => ServiceRequest::whereIn('status', ['diagnosis', 'repairing'])->count(),
+                    'completedJobs' => ServiceRequest::where('status', 'completed')
+                                                   ->whereDate('updated_at', today())
+                                                   ->count(),
+                ];
+            }
         }
 
         return view('dashboard.welcome', $stats);

@@ -9,6 +9,8 @@ use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\NotificationService;
+use App\Models\User;
 
 class ServiceRequestController extends Controller
 {
@@ -106,6 +108,21 @@ public function store(Request $request)
         // Attach issues to the custom pivot table
         $serviceRequest->issues()->attach($issueAttachments);
 
+
+
+        // Notify Admins or HelpDesk
+    $admins = User::whereHas('role', fn($q) => $q->whereIn('name', ['Admin','HelpDesk']))->get();
+
+    foreach ($admins as $admin) {
+        NotificationService::send(
+            $admin->id,
+            'service_request_created',
+            'New service request submitted by ' . auth()->user()->name,
+            url("/JobCards/{$serviceRequest->id}")
+        );
+    }
+
+
         // Redirect to show the created service request, not back to device selection
         return redirect()->route('service-requests.show', $serviceRequest->id)
                          ->with('success', 'Service request submitted successfully! Our team will contact you soon.');
@@ -132,6 +149,32 @@ public function store(Request $request)
         return view('service_requests.show', compact('serviceRequest'));
     }
 
+
+  public function history(Request $request)
+    {
+        $user = auth()->user();
+        $query = $user->serviceRequests()->with('device');
+
+        // Filtering by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filtering by device
+        if ($request->filled('device_id')) {
+            $query->where('device_id', $request->device_id);
+        }
+
+        // Filtering by date range
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $query->whereBetween('created_at', [$request->from_date, $request->to_date]);
+        }
+
+        $serviceRequests = $query->latest()->paginate(10);
+        $devices = Device::all();
+
+        return view('service_requests.history', compact('serviceRequests', 'devices'));
+    }
 
 //     public function selectIssues(Device $device)
 // {

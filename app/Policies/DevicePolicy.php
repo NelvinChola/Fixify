@@ -10,17 +10,15 @@ class DevicePolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Determine whether the user can view any devices.
-     */
+
+    // Determine whether the user can view any devices.
     public function viewAny(User $user)
     {
         return $this->isAdminOrHelpDesk($user);
     }
 
-    /**
-     * Determine whether the user can view the device.
-     */
+
+     // Determine whether the user can view the device.
     public function view(User $user, Device $device)
     {
         return $this->isAdminOrHelpDesk($user);
@@ -66,9 +64,8 @@ class DevicePolicy
         return false; // Not implemented
     }
 
-    /**
-     * Helper function to check if the user is Admin or HelpDesk
-     */
+
+    //Helper function to check if the user is Admin or HelpDesk
     private function isAdminOrHelpDesk(User $user)
     {
         return $user->role && in_array($user->role->name, ['Admin', 'HelpDesk']);

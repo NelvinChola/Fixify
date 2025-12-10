@@ -1,1205 +1,1344 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container-fluid py-3">
-    <!-- Header Section -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="h4 fw-bold text-dark mb-0">JOB CARDS</h1>
-            <p class="text-muted small mb-0 d-none d-sm-block">Job Cards Management</p>
+    <div class="container-fluid px-3 px-md-4 py-4">
+        <!-- Header Section -->
+        <div class="header-section mb-4 mb-md-5">
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2 text-gradient-primary">Job Cards Management</h1>
+                    <p class="text-muted mb-0">
+                        @if (auth()->user()->role->name === 'Technician')
+                            Manage your assigned service jobs efficiently
+                        @else
+                            Oversee and manage all service requests across the system
+                        @endif
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
+                    <div class="badge bg-light text-dark px-3 py-2 shadow-sm">
+                        <i class="fas fa-user-shield me-2 text-primary"></i>{{ auth()->user()->role->name }}
+                    </div>
+                    <div class="text-muted d-none d-md-block">
+                        <i class="fas fa-calendar me-2"></i>{{ now()->format('F j, Y') }}
+                    </div>
+                </div>
+            </div>
         </div>
-        {{-- <button class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-1"></i>
-            <span class="d-none d-sm-inline">New Job Card</span>
-            <span class="d-sm-none">New</span>
-        </button> --}}
-    </div>
 
-    <!-- Stats Overview - Role Based -->
-    <div class="row g-2 mb-3">
-        @if(auth()->user()->role->name === 'Technician')
-            <!-- TECHNICIAN VIEW -->
-            <!-- My Jobs (All assigned to technician) -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 bg-primary bg-opacity-10 h-100 cursor-pointer active" 
-                     onclick="filterRequests('all')" id="filter-all">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold text-primary mb-0" style="font-size: 0.75rem;">{{ $requests->total() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">My Jobs</p>
+        <!-- Stats Cards - Fully Responsive -->
+        <div class="row g-2 g-sm-3 g-md-4 mb-3 mb-md-4">
+            @if (auth()->user()->role->name === 'Technician')
+                <!-- TECHNICIAN VIEW - Responsive Layout -->
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=all" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'all' ? 'active' : '' }}"
+                            id="filter-all">
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-tasks"></i>
                             </div>
-                            <div class="icon-shape-sm bg-primary text-white rounded-circle" style="width: 28px; height: 28px;">
-                                <i class="fas fa-tasks" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $assignedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Jobs</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">My Jobs</p>
+                                <small class="stat-trend text-success d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-arrow-up me-1"></i>Assigned to you
+                                </small>
+                                <small class="stat-trend text-success d-inline d-sm-none">
+                                    <i class="fas fa-arrow-up me-1"></i>Assigned
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Diagnosis -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(5, 102, 141, 0.1);" 
-                     onclick="filterRequests('diagnosis')" id="filter-diagnosis">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #05668d; font-size: 0.75rem;">{{ $diagnosisCount ?? $requests->where('status', 'diagnosis')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Diagnosis</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=diagnosis" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'diagnosis' ? 'active' : '' }}"
+                            id="filter-diagnosis">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-stethoscope"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #05668d; width: 28px; height: 28px;">
-                                <i class="fas fa-stethoscope" style="font-size: 0.7rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Repairing -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(245, 245, 245, 0.5); border: 1px solid #e9ecef;" 
-                     onclick="filterRequests('repairing')" id="filter-repairing">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #6c757d; font-size: 0.75rem;">{{ $repairingCount ?? $requests->where('status', 'repairing')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Repair</p>
-                            </div>
-                            <div class="icon-shape-sm rounded-circle text-dark" style="background-color: #f5f5f5; border: 1px solid #dee2e6; width: 28px; height: 28px;">
-                                <i class="fas fa-tools" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $diagnosisCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Dx</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Diagnosis</p>
+                                <small class="stat-trend text-info d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-clock me-1"></i>Professional check up
+                                </small>
+                                <small class="stat-trend text-info d-inline d-sm-none">
+                                    <i class="fas fa-clock me-1"></i>Check up
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Completed -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(9, 61, 158, 0.1);" 
-                     onclick="filterRequests('completed')" id="filter-completed">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #093d9e; font-size: 0.75rem;">{{ $completedCount ?? $requests->where('status', 'completed')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Completed</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=repairing" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'repairing' ? 'active' : '' }}"
+                            id="filter-repairing">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-tools"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #093d9e; width: 28px; height: 28px;">
-                                <i class="fas fa-check-circle" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $repairingCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Repair</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Repair</p>
+                                <small class="stat-trend text-warning d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-play-circle me-1"></i>Being worked on
+                                </small>
+                                <small class="stat-trend text-warning d-inline d-sm-none">
+                                    <i class="fas fa-play me-1"></i>In progress
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Sent Back -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(255, 193, 7, 0.1);" 
-                     onclick="filterRequests('sent_back')" id="filter-sent_back">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #ffc107; font-size: 0.75rem;">{{ $sentBackCount ?? $requests->where('status', 'sent_back')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Sent Back</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=completed" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'completed' ? 'active' : '' }}"
+                            id="filter-completed">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #ffc107; width: 28px; height: 28px;">
-                                <i class="fas fa-undo" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $completedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Done</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Completed</p>
+                                <small class="stat-trend text-success d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-trophy me-1"></i>Done jobs
+                                </small>
+                                <small class="stat-trend text-success d-inline d-sm-none">
+                                    <i class="fas fa-check me-1"></i>Done
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Unsuccessful -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(235, 45, 47, 0.1);" 
-                     onclick="filterRequests('unsuccessful')" id="filter-unsuccessful">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #eb2d2f; font-size: 0.75rem;">{{ $unsuccessfulCount ?? $requests->where('status', 'unsuccessful')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Unsuccessful</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=sent_back" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'sent_back' ? 'active' : '' }}"
+                            id="filter-sent_back">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-undo"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #eb2d2f; width: 28px; height: 28px;">
-                                <i class="fas fa-times-circle" style="font-size: 0.7rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @else
-            <!-- HELPDESK/ADMIN VIEW -->
-            <!-- All Jobs -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 bg-primary bg-opacity-10 h-100 cursor-pointer active" 
-                     onclick="filterRequests('all')" id="filter-all">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold text-primary mb-0" style="font-size: 0.75rem;">{{ $requests->total() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">All Jobs</p>
-                            </div>
-                            <div class="icon-shape-sm bg-primary text-white rounded-circle" style="width: 28px; height: 28px;">
-                                <i class="fas fa-tasks" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $sentBackCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Return</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Sent Back</p>
+                                <small class="stat-trend text-warning d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-undo me-1"></i>Requires attention
+                                </small>
+                                <small class="stat-trend text-warning d-inline d-sm-none">
+                                    <i class="fas fa-undo me-1"></i>Review
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Diagnosis -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(5, 102, 141, 0.1);" 
-                     onclick="filterRequests('diagnosis')" id="filter-diagnosis">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #05668d; font-size: 0.75rem;">{{ $diagnosisCount ?? $requests->where('status', 'diagnosis')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Diagnosis</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl">
+                    <a href="?filter=unsuccessful" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'unsuccessful' ? 'active' : '' }}"
+                            id="filter-unsuccessful">
+                            <div class="stat-icon bg-danger">
+                                <i class="fas fa-times-circle"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #05668d; width: 28px; height: 28px;">
-                                <i class="fas fa-stethoscope" style="font-size: 0.7rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Repairing -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(245, 245, 245, 0.5); border: 1px solid #e9ecef;" 
-                     onclick="filterRequests('repairing')" id="filter-repairing">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #6c757d; font-size: 0.75rem;">{{ $repairingCount ?? $requests->where('status', 'repairing')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Repairing</p>
-                            </div>
-                            <div class="icon-shape-sm rounded-circle text-dark" style="background-color: #f5f5f5; border: 1px solid #dee2e6; width: 28px; height: 28px;">
-                                <i class="fas fa-tools" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $unsuccessfulCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Failed</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Unsuccessful</p>
+                                <small class="stat-trend text-danger d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-times me-1"></i>Failed to repair
+                                </small>
+                                <small class="stat-trend text-danger d-inline d-sm-none">
+                                    <i class="fas fa-times me-1"></i>Failed
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
+            @else
+                <!-- HELPDESK/ADMIN VIEW - Responsive Layout -->
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=all" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'all' ? 'active' : '' }}"
+                            id="filter-all">
+                            <div class="stat-icon bg-primary">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $requests->total() }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">All</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">All Jobs</p>
+                                <small class="stat-trend text-primary d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-chart-line me-1"></i>Total active
+                                </small>
+                                <small class="stat-trend text-primary d-inline d-sm-none">
+                                    <i class="fas fa-chart-line me-1"></i>Total
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
 
-            <!-- Completed -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(9, 61, 158, 0.1);" 
-                     onclick="filterRequests('completed')" id="filter-completed">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #093d9e; font-size: 0.75rem;">{{ $completedCount ?? $requests->where('status', 'completed')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Completed</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=diagnosis" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'diagnosis' ? 'active' : '' }}"
+                            id="filter-diagnosis">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-stethoscope"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #093d9e; width: 28px; height: 28px;">
-                                <i class="fas fa-check-circle" style="font-size: 0.7rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Assessed -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(102, 51, 153, 0.1);" 
-                     onclick="filterRequests('assessed')" id="filter-assessed">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #663399; font-size: 0.75rem;">{{ $assessedCount ?? $requests->where('status', 'assessed')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Assessed</p>
-                            </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #663399; width: 28px; height: 28px;">
-                                <i class="fas fa-clipboard-check" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $diagnosisCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Dx</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Diagnosis</p>
+                                <small class="stat-trend text-info d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-search me-1"></i>Under assessment
+                                </small>
+                                <small class="stat-trend text-info d-inline d-sm-none">
+                                    <i class="fas fa-search me-1"></i>Assessment
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Assigned -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(51, 153, 137, 0.1);" 
-                     onclick="filterRequests('assigned')" id="filter-assigned">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #339989; font-size: 0.75rem;">{{ $assignedCount ?? $requests->where('status', 'assigned')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Assigned</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=repairing" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'repairing' ? 'active' : '' }}"
+                            id="filter-repairing">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-tools"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #339989; width: 28px; height: 28px;">
-                                <i class="fas fa-user-check" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $repairingCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Repair</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Repairing</p>
+                                <small class="stat-trend text-warning d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-hammer me-1"></i>Active work
+                                </small>
+                                <small class="stat-trend text-warning d-inline d-sm-none">
+                                    <i class="fas fa-hammer me-1"></i>Active
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Sent Back -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(255, 193, 7, 0.1);" 
-                     onclick="filterRequests('sent_back')" id="filter-sent_back">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #ffc107; font-size: 0.75rem;">{{ $sentBackCount ?? $requests->where('status', 'sent_back')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Sent Back</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=completed" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'completed' ? 'active' : '' }}"
+                            id="filter-completed">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #ffc107; width: 28px; height: 28px;">
-                                <i class="fas fa-undo" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $completedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Done</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Completed</p>
+                                <small class="stat-trend text-success d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-trophy me-1"></i>Ready for collection
+                                </small>
+                                <small class="stat-trend text-success d-inline d-sm-none">
+                                    <i class="fas fa-trophy me-1"></i>Ready
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Unsuccessful -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(235, 45, 47, 0.1);" 
-                     onclick="filterRequests('unsuccessful')" id="filter-unsuccessful">
-                    <div class="card-body p-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-0" style="color: #eb2d2f; font-size: 0.75rem;">{{ $unsuccessfulCount ?? $requests->where('status', 'unsuccessful')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Unsuccessful</p>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=assessed" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'assessed' ? 'active' : '' }}"
+                            id="filter-assessed">
+                            <div class="stat-icon bg-purple">
+                                <i class="fas fa-clipboard-check"></i>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #eb2d2f; width: 28px; height: 28px;">
-                                <i class="fas fa-times-circle" style="font-size: 0.7rem;"></i>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $assessedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Assessed</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Assessed</p>
+                                <small class="stat-trend text-purple d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-check me-1"></i>Evaluation complete
+                                </small>
+                                <small class="stat-trend text-purple d-inline d-sm-none">
+                                    <i class="fas fa-check me-1"></i>Evaluated
+                                </small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
 
-            <!-- Archived -->
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card stat-card border-0 h-100 cursor-pointer" 
-                     style="background-color: rgba(108, 117, 125, 0.1);" 
-                     onclick="filterRequests('archived')" id="filter-archived">
-                    <div class="card-body p-1">
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=assigned" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'assigned' ? 'active' : '' }}"
+                            id="filter-assigned">
+                            <div class="stat-icon bg-teal">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $assignedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Assigned</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Assigned</p>
+                                <small class="stat-trend text-teal d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-users me-1"></i>With technicians
+                                </small>
+                                <small class="stat-trend text-teal d-inline d-sm-none">
+                                    <i class="fas fa-users me-1"></i>With Tech
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=sent_back" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'sent_back' ? 'active' : '' }}"
+                            id="filter-sent_back">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-undo"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $sentBackCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Return</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Sent Back</p>
+                                <small class="stat-trend text-warning d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-undo me-1"></i>Requires attention
+                                </small>
+                                <small class="stat-trend text-warning d-inline d-sm-none">
+                                    <i class="fas fa-undo me-1"></i>Review
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=unsuccessful" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'unsuccessful' ? 'active' : '' }}"
+                            id="filter-unsuccessful">
+                            <div class="stat-icon bg-danger">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $unsuccessfulCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Failed</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Unsuccessful</p>
+                                <small class="stat-trend text-danger d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-times me-1"></i>Cannot be repaired
+                                </small>
+                                <small class="stat-trend text-danger d-inline d-sm-none">
+                                    <i class="fas fa-times me-1"></i>Cannot repair
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-auto">
+                    <a href="?filter=archived" class="text-decoration-none d-block h-100">
+                        <div class="stat-card border-0 h-100 cursor-pointer {{ $filter == 'archived' ? 'active' : '' }}"
+                            id="filter-archived">
+                            <div class="stat-icon bg-secondary">
+                                <i class="fas fa-archive"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number mb-0 mb-sm-1">{{ $archivedCount }}</h3>
+                                <p class="stat-label mb-0 mb-sm-1 small d-md-none">Archive</p>
+                                <p class="stat-label mb-0 mb-sm-1 d-none d-md-block">Archived</p>
+                                <small class="stat-trend text-secondary d-none d-sm-inline d-md-block">
+                                    <i class="fas fa-history me-1"></i>Completed history
+                                </small>
+                                <small class="stat-trend text-secondary d-inline d-sm-none">
+                                    <i class="fas fa-history me-1"></i>History
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            @endif
+        </div>
+        <!-- Active Filter Indicator -->
+        @if ($filter !== 'all')
+            <div class="row mb-4" id="filter-indicator">
+                <div class="col-12">
+                    <div class="active-filter-card">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="fw-bold mb-0" style="color: #6c757d; font-size: 0.75rem;">{{ $archivedCount ?? $requests->where('status', 'archived')->count() }}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.6rem;">Archived</p>
+                                <span class="filter-badge">
+                                    <i class="fas fa-filter me-2"></i>
+                                    {{ ucfirst(str_replace('_', ' ', $filter)) }} Jobs
+                                </span>
+                                <small class="text-muted ms-3">
+                                    Showing {{ $requests->total() }} {{ str_replace('_', ' ', $filter) }} job
+                                    card{{ $requests->total() !== 1 ? 's' : '' }}
+                                </small>
                             </div>
-                            <div class="icon-shape-sm rounded-circle text-white" style="background-color: #6c757d; width: 28px; height: 28px;">
-                                <i class="fas fa-archive" style="font-size: 0.7rem;"></i>
-                            </div>
+                            <a href="?filter=all" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Clear Filter
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         @endif
-    </div>
 
-    <!-- Active Filter Indicator -->
-    <div class="row mb-2" id="filter-indicator" style="display: none;">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center bg-light rounded p-2">
-                <div>
-                    <span class="badge bg-primary me-2" id="active-filter-badge">
-                        @if(auth()->user()->role->name === 'Technician')
-                            My Jobs
-                        @else
-                            All Jobs
-                        @endif
-                    </span>
-                    <small class="text-muted" id="filter-count-text">
-                        @if(auth()->user()->role->name === 'Technician')
-                            Showing all my job cards
-                        @else
-                            Showing all job cards
-                        @endif
-                    </small>
-                </div>
-                <button class="btn btn-sm btn-outline-secondary" onclick="clearFilter()">
-                    <i class="fas fa-times me-1"></i>Clear Filter
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Separator Section with Action Button -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="d-flex align-items-center">
-                <div class="flex-grow-1">
-                    <hr class="my-1">
-                </div>
-                <div class="px-3">
-                    <a href="{{ route('JobCard.index') }}" class="btn btn-outline-primary btn-sm fw-bold">
-                        <i class="fas fa-external-link-alt me-2"></i>
-                        Go to page
-                    </a>
-                </div>
-                <div class="flex-grow-1">
-                    <hr class="my-1">
+        <!-- Separator Section with Action Button -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="separator-section">
+                    <div class="separator-line"></div>
+                    <div class="separator-content">
+                        <button onclick="goToJobList()" class="btn btn-outline-primary btn-hover">
+                            <i class="fas fa-external-link-alt me-2"></i>
+                            Go to Job List Page
+                        </button>
+                    </div>
+                    <div class="separator-line"></div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Rest of the job cards display code remains exactly the same -->
-    <div class="row g-3" id="requests-container">
-        @foreach($requests as $req)
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3 request-card-item" data-status="{{ $req->status }}">
-            @php
-                $statusColors = [
-                    'submitted' => [
-                        'card_bg' => 'rgba(255, 166, 43, 0.05)',
-                        'header_bg' => 'rgba(255, 166, 43, 0.15)',
-                        'border' => '2px solid rgba(255, 166, 43, 0.3)',
-                        'accent' => '#ffa62b',
-                        'badge_bg' => '#ffa62b',
-                        'badge_text' => 'white',
-                        'icon' => 'paper-plane'
-                    ],
-                    'assigned' => [
-                        'card_bg' => 'rgba(51, 153, 137, 0.05)',
-                        'header_bg' => 'rgba(51, 153, 137, 0.15)',
-                        'border' => '2px solid rgba(51, 153, 137, 0.3)',
-                        'accent' => '#339989',
-                        'badge_bg' => '#339989',
-                        'badge_text' => 'white',
-                        'icon' => 'user-check'
-                    ],
-                    'diagnosis' => [
-                        'card_bg' => 'rgba(5, 102, 141, 0.05)',
-                        'header_bg' => 'rgba(5, 102, 141, 0.15)',
-                        'border' => '2px solid rgba(5, 102, 141, 0.3)',
-                        'accent' => '#05668d',
-                        'badge_bg' => '#05668d',
-                        'badge_text' => 'white',
-                        'icon' => 'stethoscope'
-                    ],
-                    'assessed' => [
-                        'card_bg' => 'rgba(102, 51, 153, 0.05)',
-                        'header_bg' => 'rgba(102, 51, 153, 0.15)',
-                        'border' => '2px solid rgba(102, 51, 153, 0.3)',
-                        'accent' => '#663399',
-                        'badge_bg' => '#663399',
-                        'badge_text' => 'white',
-                        'icon' => 'clipboard-check'
-                    ],
-                    'repairing' => [
-                        'card_bg' => 'rgba(245, 245, 245, 0.8)',
-                        'header_bg' => 'rgba(108, 117, 125, 0.15)',
-                        'border' => '2px solid rgba(108, 117, 125, 0.3)',
-                        'accent' => '#6c757d',
-                        'badge_bg' => '#f5f5f5',
-                        'badge_text' => '#6c757d',
-                        'icon' => 'tools'
-                    ],
-                    'completed' => [
-                        'card_bg' => 'rgba(9, 61, 158, 0.05)',
-                        'header_bg' => 'rgba(9, 61, 158, 0.15)',
-                        'border' => '2px solid rgba(9, 61, 158, 0.3)',
-                        'accent' => '#093d9e',
-                        'badge_bg' => '#093d9e',
-                        'badge_text' => 'white',
-                        'icon' => 'check-circle'
-                    ],
-                    'unsuccessful' => [
-                        'card_bg' => 'rgba(235, 45, 47, 0.05)',
-                        'header_bg' => 'rgba(235, 45, 47, 0.15)',
-                        'border' => '2px solid rgba(235, 45, 47, 0.3)',
-                        'accent' => '#eb2d2f',
-                        'badge_bg' => '#eb2d2f',
-                        'badge_text' => 'white',
-                        'icon' => 'times-circle'
-                    ],
-                    'sent_back' => [
-                        'card_bg' => 'rgba(255, 193, 7, 0.05)',
-                        'header_bg' => 'rgba(255, 193, 7, 0.15)',
-                        'border' => '2px solid rgba(255, 193, 7, 0.3)',
-                        'accent' => '#ffc107',
-                        'badge_bg' => '#ffc107',
-                        'badge_text' => 'white',
-                        'icon' => 'undo'
-                    ],
-                    'archived' => [
-                        'card_bg' => 'rgba(108, 117, 125, 0.05)',
-                        'header_bg' => 'rgba(108, 117, 125, 0.15)',
-                        'border' => '2px solid rgba(108, 117, 125, 0.3)',
-                        'accent' => '#6c757d',
-                        'badge_bg' => '#6c757d',
-                        'badge_text' => 'white',
-                        'icon' => 'archive'
-                    ]
-                ];
-                $colors = $statusColors[$req->status] ?? $statusColors['submitted'];
-                
-                // Calculate payment details (only for helpdesk/admin)
-                $totalAmount = $req->final_cost ?? $req->total_cost ?? 0;
-                $paidAmount = $req->amount_paid ?? 0;
-                $balance = $totalAmount - $paidAmount;
-                $paymentStatus = $req->payment_status ?? 'pending';
-            @endphp
-            
-            <div class="card job-card h-100 status-card mb-0" 
-                 style="background: {{ $colors['card_bg'] }}; border: {{ $colors['border'] }}; border-radius: 12px;">
-                <!-- Compact Header -->
-                <div class="card-header border-0 py-2 px-3" style="background: {{ $colors['header_bg'] }}; border-radius: 12px 12px 0 0;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="badge bg-white text-dark fw-semibold" style="font-size: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">#{{ $req->id }}</span>
-                        <span class="badge rounded-pill fw-semibold" 
-                              style="background: {{ $colors['badge_bg'] }}; color: {{ $colors['badge_text'] }}; font-size: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                            <i class="fas fa-{{ $colors['icon'] }} me-1"></i>
-                            <span class="d-none d-sm-inline">{{ ucfirst($req->status) }}</span>
-                            <span class="d-sm-none">{{ substr(ucfirst($req->status), 0, 3) }}</span>
-                        </span>
-                    </div>
-                </div>
+        <!-- Job cards display - Maintaining all original functionality -->
+        <div class="row g-4" id="requests-container">
+            @foreach ($requests as $req)
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 request-card-item" data-status="{{ $req->status }}">
+                    @php
+                        $statusColors = [
+                            'submitted' => [
+                                'card_bg' => 'rgba(255, 166, 43, 0.05)',
+                                'header_bg' => 'rgba(255, 166, 43, 0.15)',
+                                'border' => '2px solid rgba(255, 166, 43, 0.3)',
+                                'accent' => '#ffa62b',
+                                'badge_bg' => '#ffa62b',
+                                'badge_text' => 'white',
+                                'icon' => 'paper-plane',
+                            ],
+                            'assigned' => [
+                                'card_bg' => 'rgba(51, 153, 137, 0.05)',
+                                'header_bg' => 'rgba(51, 153, 137, 0.15)',
+                                'border' => '2px solid rgba(51, 153, 137, 0.3)',
+                                'accent' => '#339989',
+                                'badge_bg' => '#339989',
+                                'badge_text' => 'white',
+                                'icon' => 'user-check',
+                            ],
+                            'diagnosis' => [
+                                'card_bg' => 'rgba(5, 102, 141, 0.05)',
+                                'header_bg' => 'rgba(5, 102, 141, 0.15)',
+                                'border' => '2px solid rgba(5, 102, 141, 0.3)',
+                                'accent' => '#05668d',
+                                'badge_bg' => '#05668d',
+                                'badge_text' => 'white',
+                                'icon' => 'stethoscope',
+                            ],
+                            'assessed' => [
+                                'card_bg' => 'rgba(102, 51, 153, 0.05)',
+                                'header_bg' => 'rgba(102, 51, 153, 0.15)',
+                                'border' => '2px solid rgba(102, 51, 153, 0.3)',
+                                'accent' => '#663399',
+                                'badge_bg' => '#663399',
+                                'badge_text' => 'white',
+                                'icon' => 'clipboard-check',
+                            ],
+                            'repairing' => [
+                                'card_bg' => 'rgba(245, 245, 245, 0.8)',
+                                'header_bg' => 'rgba(108, 117, 125, 0.15)',
+                                'border' => '2px solid rgba(108, 117, 125, 0.3)',
+                                'accent' => '#6c757d',
+                                'badge_bg' => '#f5f5f5',
+                                'badge_text' => '#6c757d',
+                                'icon' => 'tools',
+                            ],
+                            'completed' => [
+                                'card_bg' => 'rgba(9, 61, 158, 0.05)',
+                                'header_bg' => 'rgba(9, 61, 158, 0.15)',
+                                'border' => '2px solid rgba(9, 61, 158, 0.3)',
+                                'accent' => '#093d9e',
+                                'badge_bg' => '#093d9e',
+                                'badge_text' => 'white',
+                                'icon' => 'check-circle',
+                            ],
+                            'unsuccessful' => [
+                                'card_bg' => 'rgba(235, 45, 47, 0.05)',
+                                'header_bg' => 'rgba(235, 45, 47, 0.15)',
+                                'border' => '2px solid rgba(235, 45, 47, 0.3)',
+                                'accent' => '#eb2d2f',
+                                'badge_bg' => '#eb2d2f',
+                                'badge_text' => 'white',
+                                'icon' => 'times-circle',
+                            ],
+                            'sent_back' => [
+                                'card_bg' => 'rgba(255, 193, 7, 0.05)',
+                                'header_bg' => 'rgba(255, 193, 7, 0.15)',
+                                'border' => '2px solid rgba(255, 193, 7, 0.3)',
+                                'accent' => '#ffc107',
+                                'badge_bg' => '#ffc107',
+                                'badge_text' => 'white',
+                                'icon' => 'undo',
+                            ],
+                            'archived' => [
+                                'card_bg' => 'rgba(108, 117, 125, 0.05)',
+                                'header_bg' => 'rgba(108, 117, 125, 0.15)',
+                                'border' => '2px solid rgba(108, 117, 125, 0.3)',
+                                'accent' => '#6c757d',
+                                'badge_bg' => '#6c757d',
+                                'badge_text' => 'white',
+                                'icon' => 'archive',
+                            ],
+                        ];
+                        $colors = $statusColors[$req->status] ?? $statusColors['submitted'];
 
-                <div class="card-body p-3">
-                    <!-- Device & Customer Info -->
-                    <div class="mb-3">
-                        <!-- Device -->
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="device-icon rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" 
-                                 style="width: 32px; height: 32px; background: {{ $colors['header_bg'] }}; color: {{ $colors['accent'] }}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <i class="fas fa-laptop" style="font-size: 0.8rem;"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.8rem; line-height: 1.2;">{{ $req->device->name ?? 'N/A' }}</h6>
-                                <small class="text-muted" style="font-size: 0.65rem;">Device</small>
+                        // Calculate payment details (only for helpdesk/admin)
+                        $totalAmount = $req->final_cost ?? ($req->total_cost ?? 0);
+                        $paidAmount = $req->amount_paid ?? 0;
+                        $balance = $totalAmount - $paidAmount;
+                        $paymentStatus = $req->payment_status ?? 'pending';
+                    @endphp
+
+                    <div class="job-card"
+                        style="background: {{ $colors['card_bg'] }}; border: {{ $colors['border'] }};">
+                        <!-- Header -->
+                        <div class="job-card-header" style="background: {{ $colors['header_bg'] }};">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="job-id">#{{ $req->id }}</span>
+                                <span class="status-badge"
+                                    style="background: {{ $colors['badge_bg'] }}; color: {{ $colors['badge_text'] }};">
+                                    <i class="fas fa-{{ $colors['icon'] }} me-1"></i>
+                                    <span class="d-none d-sm-inline">{{ ucfirst($req->status) }}</span>
+                                    <span class="d-sm-none">{{ substr(ucfirst($req->status), 0, 3) }}</span>
+                                </span>
                             </div>
                         </div>
-                        
-                        <!-- Customer -->
-                        <div class="d-flex align-items-center">
-                            <div class="device-icon rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" 
-                                 style="width: 32px; height: 32px; background: {{ $colors['header_bg'] }}; color: {{ $colors['accent'] }}; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                <i class="fas fa-user" style="font-size: 0.8rem;"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.8rem; line-height: 1.2;">{{ $req->customer->name ?? 'N/A' }}</h6>
-                                <small class="text-muted" style="font-size: 0.65rem;">Customer</small>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Meta Information Row - Different for Technician vs Helpdesk/Admin -->
-                    @if(auth()->user()->role->name === 'Technician')
-                        <!-- Technician View: Only Priority -->
-                        <div class="d-flex justify-content-center align-items-center mb-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
-                            @if($req->priority)
-                            <div class="text-center">
-                                <small class="text-muted d-block" style="font-size: 0.6rem;">Priority</small>
-                                <small class="fw-semibold @if($req->priority === 'high') text-danger @elseif($req->priority === 'medium') text-warning @else text-success @endif" style="font-size: 0.7rem;">
-                                    <i class="fas fa-flag me-1"></i>
-                                    {{ ucfirst($req->priority) }}
-                                </small>
-                            </div>
-                            @endif
-                        </div>
-                    @else
-                        <!-- Helpdesk/Admin View: Full Meta Information -->
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded" style="background: rgba(0,0,0,0.03);">
-                            <!-- Date -->
-                            <div class="text-center">
-                                <small class="text-muted d-block" style="font-size: 0.6rem;">Created</small>
-                                <small class="fw-semibold text-dark" style="font-size: 0.7rem;">
-                                    <i class="fas fa-calendar me-1 text-muted"></i>
-                                    {{ $req->created_at->format('M d') }}
-                                </small>
-                            </div>
-                            
-                            <!-- Priority -->
-                            @if($req->priority)
-                            <div class="text-center">
-                                <small class="text-muted d-block" style="font-size: 0.6rem;">Priority</small>
-                                <small class="fw-semibold @if($req->priority === 'high') text-danger @elseif($req->priority === 'medium') text-warning @else text-success @endif" style="font-size: 0.7rem;">
-                                    <i class="fas fa-flag me-1"></i>
-                                    {{ substr(ucfirst($req->priority), 0, 1) }}
-                                </small>
-                            </div>
-                            @endif
-
-                            <!-- Technician (if assigned) -->
-                            @if($req->technician)
-                            <div class="text-center">
-                                <small class="text-muted d-block" style="font-size: 0.6rem;">Tech</small>
-                                <small class="fw-semibold text-dark" style="font-size: 0.7rem;">
-                                    <i class="fas fa-user-cog me-1 text-muted"></i>
-                                    {{ substr($req->technician->name, 0, 1) }}
-                                </small>
-                            </div>
-                            @endif
-                        </div>
-                    @endif
-
-                    <!-- Payment Information - Only for Helpdesk/Admin -->
-                    @if(auth()->user()->role->name !== 'Technician')
-                        @if($totalAmount > 0)
-                        <div class="cost-display mb-3 p-2 rounded @if($balance > 0) unpaid @endif" 
-                             style="background: rgba(0,0,0,0.02); border-left: 3px solid {{ $colors['accent'] }};">
-                            @if($paymentStatus === 'paid' || $balance <= 0)
-                                {{-- Fully paid --}}
-                                <div class="text-center">
-                                    <small class="text-muted d-block" style="font-size: 0.6rem;">Total Amount</small>
-                                    <div class="d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-check-circle text-success me-1" style="font-size: 0.7rem;"></i>
-                                        <span class="fw-bold text-success" style="font-size: 0.8rem;">K{{ number_format($totalAmount, 0) }}</span>
-                                        <span class="badge payment-status-badge payment-paid ms-2">PAID</span>
-                                    </div>
-                                </div>
-                            @elseif($paymentStatus === 'partial' && $paidAmount > 0)
-                                {{-- Partial payment --}}
-                                <div class="text-center">
-                                    <small class="text-muted d-block" style="font-size: 0.6rem;">Payment Status</small>
-                                    <div class="d-flex align-items-center justify-content-center mb-1">
-                                        <i class="fas fa-money-bill-wave text-warning me-1" style="font-size: 0.7rem;"></i>
-                                        <span class="fw-bold text-warning" style="font-size: 0.8rem;">K{{ number_format($totalAmount, 0) }}</span>
-                                        <span class="badge payment-status-badge payment-partial ms-2">PARTIAL</span>
-                                    </div>
-                                    <div class="row g-1 text-muted" style="font-size: 0.55rem;">
-                                        <div class="col-6">
-                                            <small>Paid: K{{ number_format($paidAmount, 0) }}</small>
+                        <div class="job-card-body">
+                            <!-- Device & Customer Info -->
+                            <div class="info-section">
+                                <!-- Device -->
+                                <div class="info-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="info-icon me-3"
+                                            style="background: {{ $colors['header_bg'] }}; color: {{ $colors['accent'] }};">
+                                            <i class="fas fa-laptop"></i>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="fw-semibold text-danger">Due: K{{ number_format($balance, 0) }}</small>
+                                        <div>
+                                            <h6 class="info-title">{{ $req->device->name ?? 'N/A' }}</h6>
+                                            <small class="info-subtitle">Device</small>
                                         </div>
                                     </div>
                                 </div>
-                            @else
-                                {{-- Unpaid or pending --}}
-                                <div class="text-center">
-                                    <small class="text-muted d-block" style="font-size: 0.6rem;">Total Amount</small>
-                                    <div class="d-flex align-items-center justify-content-center mb-1">
-                                        <i class="fas fa-money-bill-wave text-danger me-1" style="font-size: 0.7rem;"></i>
-                                        <span class="fw-bold text-danger" style="font-size: 0.8rem;">K{{ number_format($totalAmount, 0) }}</span>
-                                        <span class="badge payment-status-badge payment-pending ms-2">
-                                            {{ $paymentStatus === 'pending' ? 'UNPAID' : strtoupper($paymentStatus) }}
-                                        </span>
-                                    </div>
-                                    @if($paidAmount > 0)
-                                    <div class="row g-1 text-muted" style="font-size: 0.55rem;">
-                                        <div class="col-6">
-                                            <small>Paid: K{{ number_format($paidAmount, 0) }}</small>
+
+                                <!-- Customer -->
+                                <div class="info-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="info-icon me-3"
+                                            style="background: {{ $colors['header_bg'] }}; color: {{ $colors['accent'] }};">
+                                            <i class="fas fa-user"></i>
                                         </div>
-                                        <div class="col-6">
-                                            <small class="fw-semibold text-danger">Due: K{{ number_format($balance, 0) }}</small>
+                                        <div>
+                                            <h6 class="info-title">{{ $req->customer->name ?? 'N/A' }}</h6>
+                                            <small class="info-subtitle">Customer</small>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Meta Information -->
+                            @if (auth()->user()->role->name === 'Technician')
+                                <!-- Technician View: Only Priority -->
+                                <div class="meta-section" style="background: rgba(0,0,0,0.03);">
+                                    @if ($req->priority)
+                                        <div class="meta-item text-center">
+                                            <small class="meta-label">Priority</small>
+                                            <small
+                                                class="meta-value @if ($req->priority === 'high') text-danger @elseif($req->priority === 'medium') text-warning @else text-success @endif">
+                                                <i class="fas fa-flag me-1"></i>
+                                                {{ ucfirst($req->priority) }}
+                                            </small>
+                                        </div>
                                     @endif
                                 </div>
+                            @else
+                                <!-- Helpdesk/Admin View: Full Meta Information -->
+                                <div class="meta-section" style="background: rgba(0,0,0,0.03);">
+                                    <div class="row g-2">
+                                        <!-- Date -->
+                                        <div class="col-4">
+                                            <div class="meta-item text-center">
+                                                <small class="meta-label">Created</small>
+                                                <small class="meta-value">
+                                                    <i class="fas fa-calendar me-1 text-muted"></i>
+                                                    {{ $req->created_at->format('M d') }}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Priority -->
+                                        @if ($req->priority)
+                                            <div class="col-4">
+                                                <div class="meta-item text-center">
+                                                    <small class="meta-label">Priority</small>
+                                                    <small
+                                                        class="meta-value @if ($req->priority === 'high') text-danger @elseif($req->priority === 'medium') text-warning @else text-success @endif">
+                                                        <i class="fas fa-flag me-1"></i>
+                                                        {{ substr(ucfirst($req->priority), 0, 1) }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        <!-- Technician (if assigned) -->
+                                        @if ($req->technician)
+                                            <div class="col-4">
+                                                <div class="meta-item text-center">
+                                                    <small class="meta-label">Tech</small>
+                                                    <small class="meta-value">
+                                                        <i class="fas fa-user-cog me-1 text-muted"></i>
+                                                        {{ substr($req->technician->name, 0, 1) }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             @endif
-                        </div>
-                        @elseif($req->total_cost)
-                        {{-- Show total cost for non-completed jobs --}}
-                        <div class="cost-display mb-3 p-2 rounded text-center" style="background: rgba(0,0,0,0.02);">
-                            <small class="text-muted d-block" style="font-size: 0.6rem;">Estimated Cost</small>
-                            <div class="d-flex align-items-center justify-content-center">
-                                <i class="fas fa-money-sign text-success me-1" style="font-size: 0.7rem;"></i>
-                                <span class="fw-bold text-success" style="font-size: 0.8rem;">K{{ number_format($req->total_cost, 0) }}</span>
+
+                            <!-- Payment Information - Only for Helpdesk/Admin -->
+                            @if (auth()->user()->role->name !== 'Technician')
+                                @if ($totalAmount > 0)
+                                    <div class="payment-section @if ($balance > 0) unpaid @endif"
+                                        style="border-left: 3px solid {{ $colors['accent'] }};">
+                                        @if ($paymentStatus === 'paid' || $balance <= 0)
+                                            {{-- Fully paid --}}
+                                            <div class="text-center">
+                                                <small class="payment-label">Total Amount</small>
+                                                <div class="d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    <span
+                                                        class="payment-amount text-success">K{{ number_format($totalAmount, 0) }}</span>
+                                                    <span class="payment-badge paid ms-2">PAID</span>
+                                                </div>
+                                            </div>
+                                        @elseif($paymentStatus === 'partial' && $paidAmount > 0)
+                                            {{-- Partial payment --}}
+                                            <div class="text-center">
+                                                <small class="payment-label">Payment Status</small>
+                                                <div class="d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="fas fa-money-bill-wave text-warning me-2"></i>
+                                                    <span
+                                                        class="payment-amount text-warning">K{{ number_format($totalAmount, 0) }}</span>
+                                                    <span class="payment-badge partial ms-2">PARTIAL</span>
+                                                </div>
+                                                <div class="row g-1">
+                                                    <div class="col-6">
+                                                        <small>Paid: K{{ number_format($paidAmount, 0) }}</small>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-danger fw-semibold">Due:
+                                                            K{{ number_format($balance, 0) }}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{-- Unpaid or pending --}}
+                                            <div class="text-center">
+                                                <small class="payment-label">Total Amount</small>
+                                                <div class="d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="fas fa-money-bill-wave text-danger me-2"></i>
+                                                    <span
+                                                        class="payment-amount text-danger">K{{ number_format($totalAmount, 0) }}</span>
+                                                    <span class="payment-badge pending ms-2">
+                                                        {{ $paymentStatus === 'pending' ? 'UNPAID' : strtoupper($paymentStatus) }}
+                                                    </span>
+                                                </div>
+                                                @if ($paidAmount > 0)
+                                                    <div class="row g-1">
+                                                        <div class="col-6">
+                                                            <small>Paid: K{{ number_format($paidAmount, 0) }}</small>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-danger fw-semibold">Due:
+                                                                K{{ number_format($balance, 0) }}</small>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                @elseif($req->total_cost)
+                                    {{-- Show total cost for non-completed jobs --}}
+                                    <div class="payment-section text-center">
+                                        <small class="payment-label">Estimated Cost</small>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-money-sign text-success me-2"></i>
+                                            <span
+                                                class="payment-amount text-success">K{{ number_format($req->total_cost, 0) }}</span>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- No cost set --}}
+                                    <div class="payment-section text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-money-bill-wave me-1"></i>
+                                            No cost set
+                                        </small>
+                                    </div>
+                                @endif
+                            @endif
+
+                            <!-- Actions -->
+                            <div class="action-section">
+                                <a href="{{ route('JobCard.show', $req->id) }}" class="btn btn-outline-primary btn-view">
+                                    <i class="fas fa-eye me-1"></i>
+                                    <span class="d-none d-sm-inline">View Details</span>
+                                    <span class="d-sm-none">View</span>
+                                </a>
                             </div>
                         </div>
-                        @else
-                        {{-- No cost set --}}
-                        <div class="cost-display mb-3 p-2 rounded text-center" style="background: rgba(0,0,0,0.02);">
-                            <small class="text-muted" style="font-size: 0.65rem;">
-                                <i class="fas fa-money-bill-wave me-1"></i>
-                                No cost set
-                            </small>
-                        </div>
-                        @endif
-                    @endif
-
-                    <!-- Actions -->
-                    <div class="d-grid">
-                        <a href="{{ route('JobCard.show', $req->id) }}" class="btn btn-outline-primary btn-sm py-2 fw-semibold" 
-                           style="font-size: 0.75rem; border-width: 1.5px; border-radius: 8px; transition: all 0.3s ease;">
-                            <i class="fas fa-eye me-1"></i>
-                            <span class="d-none d-sm-inline">View Details</span>
-                            <span class="d-sm-none">View</span>
-                        </a>
                     </div>
                 </div>
-            </div>
+            @endforeach
         </div>
-        @endforeach
-    </div>
 
-    <!-- Empty State -->
-    <div class="text-center py-4" id="no-requests-message" style="display: none;">
-        <div class="icon-shape-sm bg-primary bg-opacity-10 text-primary rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-search"></i>
-        </div>
-        <h5 class="text-dark mb-2">No job cards found</h5>
-        <p class="text-muted mb-3 small" id="no-requests-text">There are no job cards matching your filter.</p>
-        <button class="btn btn-primary btn-sm" onclick="clearFilter()">
-            <i class="fas fa-times me-1"></i>Clear Filter
-        </button>
-    </div>
-
-    <!-- Original Empty State -->
-    @if($requests->isEmpty())
-    <div class="text-center py-4" id="original-empty-state">
-        <div class="icon-shape-sm bg-primary bg-opacity-10 text-primary rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-tasks"></i>
-        </div>
-        <h5 class="text-dark mb-2">No job cards</h5>
-        <p class="text-muted mb-3 small">
-            @if(auth()->user()->role->name === 'Technician')
-                There are no job cards assigned to you.
-            @else
-                There are no job cards to display.
-            @endif
-        </p>
-        {{-- <button class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-1"></i>Create Job Card
-        </button> --}}
-    </div>
-    @endif
-
-    <!-- Pagination - Mobile Optimized -->
-    @if($requests->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div class="text-muted" style="font-size: 0.75rem;">
-            <span class="d-none d-sm-inline">Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of {{ $requests->total() }}</span>
-            <span class="d-sm-none">{{ $requests->currentPage() }}/{{ $requests->lastPage() }}</span>
-        </div>
-        <nav>
-            <ul class="pagination mb-0 pagination-sm">
-                <!-- Previous Page Link -->
-                @if($requests->onFirstPage())
-                    <li class="page-item disabled">
-                        <span class="page-link" style="font-size: 0.75rem;">&laquo;</span>
-                    </li>
-                @else
-                    <li class="page-item">
-                        <a class="page-link" href="{{ $requests->previousPageUrl() }}" rel="prev" style="font-size: 0.75rem;">&laquo;</a>
-                    </li>
-                @endif
-
-                <!-- Mobile: Show current page, Desktop: Show all pages -->
-                <li class="page-item active d-sm-none">
-                    <span class="page-link" style="font-size: 0.75rem;">{{ $requests->currentPage() }}</span>
-                </li>
-
-                @foreach($requests->getUrlRange(1, $requests->lastPage()) as $page => $url)
-                    @if($page == $requests->currentPage())
-                        <li class="page-item active d-none d-sm-block">
-                            <span class="page-link" style="font-size: 0.75rem;">{{ $page }}</span>
-                        </li>
+        <!-- Empty State -->
+        @if ($requests->isEmpty())
+            <div class="empty-state text-center py-5" id="original-empty-state">
+                <div class="empty-icon mb-4">
+                    <i class="fas fa-tasks fa-3x text-muted opacity-50"></i>
+                </div>
+                <h4 class="empty-title">No job cards</h4>
+                <p class="empty-text mb-4">
+                    @if (auth()->user()->role->name === 'Technician')
+                        There are no job cards assigned to you.
                     @else
-                        <li class="page-item d-none d-sm-block">
-                            <a class="page-link" href="{{ $url }}" style="font-size: 0.75rem;">{{ $page }}</a>
-                        </li>
+                        @if ($filter !== 'all')
+                            There are no {{ str_replace('_', ' ', $filter) }} job cards to display.
+                        @else
+                            There are no job cards to display.
+                        @endif
                     @endif
-                @endforeach
-
-                <!-- Next Page Link -->
-                @if($requests->hasMorePages())
-                    <li class="page-item">
-                        <a class="page-link" href="{{ $requests->nextPageUrl() }}" rel="next" style="font-size: 0.75rem;">&raquo;</a>
-                    </li>
-                @else
-                    <li class="page-item disabled">
-                        <span class="page-link" style="font-size: 0.75rem;">&raquo;</span>
-                    </li>
+                </p>
+                @if ($filter !== 'all')
+                    <a href="?filter=all" class="btn btn-primary">
+                        <i class="fas fa-times me-1"></i>Clear Filter
+                    </a>
                 @endif
-            </ul>
-        </nav>
+            </div>
+        @endif
+
+        <!-- Pagination -->
+        @if ($requests->hasPages())
+            <div class="pagination-section">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="pagination-info text-muted">
+                        <span class="d-none d-sm-inline">Showing {{ $requests->firstItem() }} to
+                            {{ $requests->lastItem() }} of {{ $requests->total() }}</span>
+                        <span class="d-sm-none">{{ $requests->currentPage() }}/{{ $requests->lastPage() }}</span>
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <!-- Previous Page Link -->
+                            @if ($requests->onFirstPage())
+                                <li class="page-item disabled">
+                                    <span class="page-link">&laquo;</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $requests->previousPageUrl() }}"
+                                        rel="prev">&laquo;</a>
+                                </li>
+                            @endif
+
+                            <!-- Mobile: Show current page, Desktop: Show all pages -->
+                            <li class="page-item active d-sm-none">
+                                <span class="page-link">{{ $requests->currentPage() }}</span>
+                            </li>
+
+                            @foreach ($requests->getUrlRange(1, $requests->lastPage()) as $page => $url)
+                                @if ($page == $requests->currentPage())
+                                    <li class="page-item active d-none d-sm-block">
+                                        <span class="page-link">{{ $page }}</span>
+                                    </li>
+                                @else
+                                    <li class="page-item d-none d-sm-block">
+                                        <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                    </li>
+                                @endif
+                            @endforeach
+
+                            <!-- Next Page Link -->
+                            @if ($requests->hasMorePages())
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $requests->nextPageUrl() }}"
+                                        rel="next">&raquo;</a>
+                                </li>
+                            @else
+                                <li class="page-item disabled">
+                                    <span class="page-link">&raquo;</span>
+                                </li>
+                            @endif
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        @endif
     </div>
-    @endif
-</div>
 
-<style>
-.stat-card {
-    transition: transform 0.2s ease-in-out;
-    min-height: 50px;
-    border: 2px solid transparent;
-}
-
-.stat-card:hover {
-    transform: translateY(-1px);
-}
-
-.stat-card.active {
-    border: 2px solid #2196f3 !important;
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2) !important;
-}
-
-.status-card {
-    transition: all 0.3s ease;
-    border-radius: 8px;
-}
-
-.status-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-}
-
-.job-card .card-header {
-    border-radius: 6px 6px 0 0 !important;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.device-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.icon-shape-sm {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-}
-
-/* Clickable stat cards */
-.cursor-pointer {
-    cursor: pointer;
-}
-
-/* Filter indicator */
-#filter-indicator {
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Job card animations */
-.request-card-item {
-    transition: all 0.3s ease;
-}
-
-.request-card-item.hidden {
-    display: none;
-}
-
-/* Modern Blue Color Scheme */
-.bg-primary {
-    background-color: #2196f3 !important;
-}
-
-.bg-primary.bg-opacity-10 {
-    background-color: rgba(33, 150, 243, 0.1) !important;
-}
-
-.text-primary {
-    color: #2196f3 !important;
-}
-
-.btn-primary {
-    background-color: #2196f3;
-    border-color: #2196f3;
-    font-size: 0.8rem;
-}
-
-.btn-primary:hover {
-    background-color: #1976d2;
-    border-color: #1976d2;
-}
-
-.btn-outline-primary {
-    color: #2196f3;
-    border-color: #2196f3;
-    font-size: 0.7rem;
-}
-
-.btn-outline-primary:hover {
-    background-color: #2196f3;
-    border-color: #2196f3;
-    color: white;
-}
-
-/* Compact styling */
-.job-card .card-body {
-    padding: 0.5rem;
-}
-
-.badge {
-    font-weight: 500;
-    border: none;
-}
-
-.btn {
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.page-link {
-    border-radius: 4px;
-    margin: 0 1px;
-    border: 1px solid #e3f2fd;
-    padding: 0.25rem 0.5rem;
-}
-
-.page-item.active .page-link {
-    background-color: #2196f3;
-    border-color: #2196f3;
-}
-
-.page-link:hover {
-    border-color: #2196f3;
-    color: #2196f3;
-}
-
-/* Mobile optimizations */
-@media (max-width: 576px) {
-    .container-fluid {
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-    
-    .stat-card .card-body {
-        padding: 0.5rem;
-    }
-    
-    .job-card {
-        font-size: 0.8rem;
-    }
-    
-    .stat-card {
-        min-height: 45px;
-    }
-}
-
-/* Ensure text remains readable on colored backgrounds */
-.status-card .text-dark {
-    color: #2d3748 !important;
-}
-
-.status-card .text-muted {
-    color: #718096 !important;
-}
-
-/* Hover effects for status cards */
-.status-card:hover .device-icon {
-    transform: scale(1.05);
-}
-
-/* Enhanced Card Styling */
-.job-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.job-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-.job-card .card-header {
-    border-radius: 12px 12px 0 0 !important;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-    padding: 0.75rem 1rem;
-}
-
-.job-card .card-body {
-    padding: 1rem;
-}
-
-/* Enhanced Device Icons */
-.device-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.device-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Improved Payment Status */
-.cost-display {
-    transition: all 0.3s ease;
-    border-left: 3px solid #2196f3;
-}
-
-.cost-display.unpaid {
-    border-left-color: #dc3545;
-    background: rgba(220, 53, 69, 0.03) !important;
-}
-
-.cost-display:hover {
-    transform: translateX(2px);
-}
-
-/* Enhanced Badges */
-.badge {
-    font-weight: 600;
-    border: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
-
-.badge:hover {
-    transform: scale(1.05);
-}
-
-/* Improved Buttons */
-.btn-outline-primary {
-    border-width: 1.5px;
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-outline-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-}
-
-/* Payment status styles */
-.payment-status-badge {
-    font-size: 0.55rem;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.payment-pending {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    color: white;
-}
-
-.payment-paid {
-    background: linear-gradient(135deg, #28a745, #218838);
-    color: white;
-}
-
-.payment-partial {
-    background: linear-gradient(135deg, #ffc107, #e0a800);
-    color: black;
-}
-
-/* Meta information grid */
-.meta-grid {
-    background: rgba(0,0,0,0.02);
-    border-radius: 8px;
-    padding: 0.5rem;
-}
-
-/* Enhanced responsive design */
-@media (max-width: 576px) {
-    .job-card .card-body {
-        padding: 0.75rem;
-    }
-    
-    .device-icon {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    
-    .device-icon i {
-        font-size: 0.7rem !important;
-    }
-}
-
-/* Smooth animations */
-.status-card {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Improved text hierarchy */
-.job-card .text-dark {
-    color: #2d3748 !important;
-    font-weight: 700;
-}
-
-.job-card .text-muted {
-    color: #718096 !important;
-    font-weight: 500;
-}
-
-/* Enhanced hover effects */
-.status-card:hover .device-icon {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Compact payment info */
-.cost-display .text-muted {
-    line-height: 1.2;
-}
-
-/* Enhanced active state for filter cards */
-.stat-card.active::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border: 2px solid #2196f3;
-    border-radius: inherit;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 6px rgba(33, 150, 243, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
-    }
-}
-</style>
-
-<script>
-let currentFilter = 'all';
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Add click handlers to all stat cards
-    const statCards = document.querySelectorAll('.stat-card');
-    
-    statCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove active class from all stat cards
-            statCards.forEach(c => c.classList.remove('active'));
-            // Add active class to clicked card
-            this.classList.add('active');
-        });
-    });
-
-    // Add smooth hover effects to cards
-    const jobCards = document.querySelectorAll('.status-card');
-    
-    jobCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-
-    // Add hover effects to stat cards
-    statCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            if (!this.classList.contains('active')) {
-                this.style.transform = 'translateY(-1px)';
-            }
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            if (!this.classList.contains('active')) {
-                this.style.transform = 'translateY(0)';
-            }
-        });
-    });
-});
-
-function filterRequests(status) {
-    currentFilter = status;
-    
-    // Update active stat card
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach(card => card.classList.remove('active'));
-    
-    // Activate the clicked stat card
-    const activeCard = document.getElementById(`filter-${status}`);
-    if (activeCard) activeCard.classList.add('active');
-    
-    // Filter job cards
-    const jobCards = document.querySelectorAll('.request-card-item');
-    let visibleCount = 0;
-    
-    jobCards.forEach(card => {
-        if (status === 'all' || card.getAttribute('data-status') === status) {
-            card.classList.remove('hidden');
-            visibleCount++;
-        } else {
-            card.classList.add('hidden');
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --primary-hover: #2563eb;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-    });
-    
-    // Update filter indicator
-    const filterIndicator = document.getElementById('filter-indicator');
-    const activeFilterBadge = document.getElementById('active-filter-badge');
-    const filterCountText = document.getElementById('filter-count-text');
-    
-    if (status === 'all') {
-        filterIndicator.style.display = 'none';
-    } else {
-        filterIndicator.style.display = 'block';
-        const statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        activeFilterBadge.textContent = `${statusText} Job Cards`;
-        filterCountText.textContent = `Showing ${visibleCount} ${statusText.toLowerCase()} job card${visibleCount !== 1 ? 's' : ''}`;
-    }
-    
-    // Show/hide empty state messages
-    const noRequestsMessage = document.getElementById('no-requests-message');
-    const originalEmptyState = document.getElementById('original-empty-state');
-    const noRequestsText = document.getElementById('no-requests-text');
-    
-    if (visibleCount === 0 && status !== 'all') {
-        noRequestsMessage.style.display = 'block';
-        if (originalEmptyState) originalEmptyState.style.display = 'none';
-        const statusText = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-        noRequestsText.textContent = `There are no ${statusText.toLowerCase()} job cards.`;
-    } else {
-        noRequestsMessage.style.display = 'none';
-        if (originalEmptyState) originalEmptyState.style.display = 'block';
-    }
-}
 
-function clearFilter() {
-    filterRequests('all');
-    
-    // Remove active class from all stat cards
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach(card => card.classList.remove('active'));
-    
-    // Activate the "My Jobs" card by default
-    const myJobsCard = document.getElementById('filter-all');
-    if (myJobsCard) myJobsCard.classList.add('active');
-    
-    // Hide filter indicator
-    document.getElementById('filter-indicator').style.display = 'none';
-}
-</script>
+        .text-gradient-primary {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .stat-card.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+        }
+
+        .stat-card.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .bg-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+        }
+
+        .bg-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .bg-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .bg-info {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        }
+
+        .bg-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .bg-purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .bg-teal {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+        }
+
+        .bg-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin: 0;
+            color: #1f2937;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 4px 0;
+        }
+
+        .stat-trend {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Job Cards */
+        .job-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
+            height: 100%;
+            border: 2px solid transparent;
+        }
+
+        .job-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .job-card-header {
+            padding: 16px 20px;
+            position: relative;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .job-id {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-transform: capitalize;
+        }
+
+        .job-card-body {
+            padding: 20px;
+        }
+
+        /* Info Items */
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .info-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Meta Section */
+        .meta-section {
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            padding: 4px 0;
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Payment Section */
+        .payment-section {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .payment-section.unpaid {
+            background: rgba(220, 53, 69, 0.03);
+            border-left-color: #dc3545 !important;
+        }
+
+        .payment-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .payment-amount {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .payment-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-badge.paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .payment-badge.pending {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .payment-badge.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Action Section */
+        .action-section {
+            margin-top: 20px;
+        }
+
+        .btn-view {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            border-width: 1.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+        }
+
+        /* Active Filter */
+        .active-filter-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .filter-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
+        }
+
+        /* Separator Section */
+        .separator-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .separator-line {
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .separator-content {
+            padding: 0 20px;
+        }
+
+        .btn-hover {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Empty State */
+        .empty-state {
+            background: white;
+            border-radius: 12px;
+            padding: 60px 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .empty-icon {
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .empty-text {
+            color: #6b7280;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Pagination */
+        .pagination-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-top: 30px;
+        }
+
+        .pagination {
+            margin: 0;
+        }
+
+        .page-link {
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            padding: 8px 14px;
+            margin: 0 2px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .page-link:hover {
+            background: #f3f4f6;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .job-card,
+        .stat-card {
+            animation: fadeInUp 0.4s ease forwards;
+            animation-delay: calc(var(--card-index) * 0.1s);
+            opacity: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1rem;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .job-card-header {
+                padding: 12px 16px;
+            }
+
+            .job-card-body {
+                padding: 16px;
+            }
+
+            .info-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .info-title {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 0.875rem;
+            }
+
+            .stat-number {
+                font-size: 1.25rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .job-card {
+                margin-bottom: 15px;
+            }
+
+            .payment-amount {
+                font-size: 1rem;
+            }
+
+            .btn-view {
+                padding: 8px;
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Hover Effects */
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1);
+        }
+
+        .job-card:hover .info-icon {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+
+    <script>
+        function goToJobList() {
+            // Get the current active filter from URL parameter or default to 'all'
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeFilter = urlParams.get('filter') || 'all';
+
+            // Navigate to job list page with the current filter
+            window.location.href = `/job-list?filter=${activeFilter}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation delays to cards
+            const statCards = document.querySelectorAll('.stat-card');
+            const jobCards = document.querySelectorAll('.job-card');
+
+            statCards.forEach((card, index) => {
+                card.style.setProperty('--card-index', index);
+            });
+
+            jobCards.forEach((card, index) => {
+                card.style.setProperty('--card-index', index + statCards.length);
+            });
+
+            // Add active state to filter cards on click
+            const filterLinks = document.querySelectorAll('.stat-card');
+            filterLinks.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove active class from all stat cards
+                    filterLinks.forEach(c => c.classList.remove('active'));
+                    // Add active class to clicked card
+                    this.classList.add('active');
+                });
+            });
+
+            // Add hover effect to job cards
+            jobCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Auto-refresh for technicians (every 30 seconds)
+            if ('{{ auth()->user()->role->name }}' === 'Technician') {
+                setInterval(() => {
+                    // Check if user is actively using the page
+                    if (!document.hidden) {
+                        // Only refresh if no modals are open and user is not interacting with forms
+                        if (!document.querySelector('.modal.show')) {
+                            window.location.reload();
+                        }
+                    }
+                }, 30000); // 30 seconds
+            }
+        });
+    </script>
 @endsection

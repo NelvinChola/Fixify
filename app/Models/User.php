@@ -35,10 +35,15 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-    public function isAdmin()
+
+    public function isAdminOrHelpDesk()
     {
-        return $this->role->name === 'Admin';
+        return $this->role && in_array($this->role->name, ['Admin', 'HelpDesk']);
     }
+    // public function isAdmin()
+    // {
+    //     return $this->role->name === 'Admin';
+    // }
 
 
     /**
@@ -80,4 +85,26 @@ class User extends Authenticatable
     {
         return $this->is_temp_password;
     }
+
+        /**
+     * Get all service requests submitted by the user.
+     */
+   public function serviceRequests()
+{
+    return $this->hasMany(ServiceRequest::class, 'customer_id');
+}
+
+//relationhip to track notifications
+public function notifications()
+{
+    return $this->hasMany(Notification::class)->latest();
+}
+
+//relationhip to track unread notifications
+public function unreadNotifications()
+{
+    return $this->notifications()->where('read', false);
+}
+
+
 }

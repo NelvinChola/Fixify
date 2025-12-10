@@ -187,6 +187,34 @@
     </div>
 </div>
 
+{{-- Notes Buttons Section --}}
+<div class="d-flex gap-2 mb-3">
+
+    {{-- Unsuccessful Notes Button --}}
+    @if($request->status == 'unsuccessful' && $request->unsuccessful_notes && $userRole !== 'customer')
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#unsuccessfulNotesModal">
+            <i class="fas fa-times-circle me-2"></i>View Unsuccessful Notes
+        </button>
+    @endif
+
+    {{-- Assessment Notes Button --}}
+    @if(!empty($request->assessment_notes) && $userRole !== 'customer')
+        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#assessmentNotesModal">
+            <i class="fas fa-sticky-note me-2"></i>View Assessment Notes
+        </button>
+    @endif
+
+    {{-- Sent Back Notes Button --}}
+    @if(!empty($request->sent_back_notes) && $userRole !== 'customer')
+        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#sentBackNotesModal">
+            <i class="fas fa-undo-alt me-2"></i>View Sent Back Notes
+        </button>
+    @endif
+
+</div>
+
+
+
 {{-- Selected Device Issues - Border Style --}}
 @if(!$isHelpdesk && $request->issues->count() > 0)
 <div class="card p-4 mb-4 shadow-sm border-0 border-start border-4 border-primary">
@@ -205,6 +233,7 @@
     </div>
 </div>
 @endif
+
 
 
 {{-- Payment Management Section --}}
@@ -334,81 +363,6 @@
     </div>
 </div>
 @endif
-
-    {{-- Status Notes Display Section --}}
-    <div class="mb-4">
-        {{-- Assessment Notes --}}
-        @if($request->status == 'assessed' && $request->assessment_notes)
-        <div class="card p-4 mb-3 shadow-sm border-0 border-info">
-            <h5 class="fw-semibold mb-3 text-info">
-                <i class="fas fa-clipboard-check me-2"></i>Assessment Information
-            </h5>
-            <div class="alert alert-info">
-                <div class="d-flex">
-                    <i class="fas fa-info-circle fa-2x me-3 mt-1"></i>
-                    <div>
-                        <h6 class="alert-heading mb-2">Initial Assessment Details</h6>
-                        <p class="mb-1"><strong>Assessment Notes:</strong></p>
-                        <p class="mb-0">{{ $request->assessment_notes }}</p>
-                        @if($request->assessed_at)
-                            <small class="text-muted mt-2 d-block">
-                                Assessed on: {{ $request->assessed_at->format('M j, Y g:i A') }}
-                            </small>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Unsuccessful Notes --}}
-        @if($request->status == 'unsuccessful' && $request->unsuccessful_notes)
-        <div class="card p-4 mb-3 shadow-sm border-0 border-danger">
-            <h5 class="fw-semibold mb-3 text-danger">
-                <i class="fas fa-times-circle me-2"></i>Unsuccessful Repair Information
-            </h5>
-            <div class="alert alert-danger">
-                <div class="d-flex">
-                    <i class="fas fa-exclamation-triangle fa-2x me-3 mt-1"></i>
-                    <div>
-                        <h6 class="alert-heading mb-2">Repair Unsuccessful - Details</h6>
-                        <p class="mb-1"><strong>Reason:</strong></p>
-                        <p class="mb-0">{{ $request->unsuccessful_notes }}</p>
-                        @if($request->unsuccessful_at)
-                            <small class="text-muted mt-2 d-block">
-                                Marked as unsuccessful on: {{ $request->unsuccessful_at->format('M j, Y g:i A') }}
-                            </small>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Sent Back Notes --}}
-        @if($request->status == 'sent_back' && $request->sent_back_notes)
-        <div class="card p-4 mb-3 shadow-sm border-0 border-warning">
-            <h5 class="fw-semibold mb-3 text-warning">
-                <i class="fas fa-undo me-2"></i>Sent Back Information
-            </h5>
-            <div class="alert alert-warning">
-                <div class="d-flex">
-                    <i class="fas fa-exclamation-circle fa-2x me-3 mt-1"></i>
-                    <div>
-                        <h6 class="alert-heading mb-2">This job card was sent back by the technician</h6>
-                        <p class="mb-1"><strong>Reason:</strong></p>
-                        <p class="mb-0">{{ $request->sent_back_notes }}</p>
-                        @if($request->sent_back_at)
-                            <small class="text-muted mt-2 d-block">
-                                Sent back on: {{ $request->sent_back_at->format('M j, Y g:i A') }}
-                            </small>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
 
     {{-- Sent Back Actions - Only show to Helpdesk and Admin --}}
     @if(!$isTechnician && $request->status == 'sent_back')
@@ -612,7 +566,7 @@
             </div>
 
             {{-- Help Text --}}
-            <div class="mt-3">
+            {{-- <div class="mt-3">
                 <small class="text-muted">
                     @if($isHelpdesk)
                         You can update up to <strong>Assigned</strong> status
@@ -622,9 +576,9 @@
                         Full administrative access to all status updates
                     @endif
                 </small>
-            </div>
+            </div> --}}
         @else
-            <div class="alert alert-warning mb-0">
+            {{-- <div class="alert alert-warning mb-0">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <div>
@@ -632,7 +586,7 @@
                         <p class="mb-0 small">Follow the sequential workflow: Submitted → Assessed → Assigned → Diagnosis → Repairing → Final Outcome</p>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         @endif
     </div>
     @endif
@@ -1426,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <small class="text-muted">This information will be shared with the customer.</small>
                     </div>
 
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="unsuccessful_reason" class="form-label fw-bold">
                             Primary Reason <span class="text-danger">*</span>
                         </label>
@@ -1439,15 +1393,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="obsolete_device">Device Obsolete/Discontinued</option>
                             <option value="other">Other Reason</option>
                         </select>
-                    </div>
+                    </div> --}}
 
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="recommendation" class="form-label fw-bold">
                             Recommendation to Customer
                         </label>
                         <textarea class="form-control" id="recommendation" name="recommendation" 
                                   rows="2" placeholder="Suggest next steps for the customer (e.g., consider replacement, try another service center, etc.)">{{ old('recommendation') }}</textarea>
-                    </div>
+                    </div> --}}
 
                 </div>
                 <div class="modal-footer">
@@ -1564,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('JobCard.update-status', $request->id) }}" method="POST" id="sentBackForm">
+            <form action="{{ route('JobCard.sent-back', $request->id) }}" method="POST" id="sentBackForm">
                 @csrf
                 <input type="hidden" name="status" value="sent_back">
                 
@@ -1584,7 +1538,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <small class="text-muted">This information will help the helpdesk team understand what additional support is needed.</small>
                     </div>
 
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="sent_back_reason" class="form-label fw-bold">
                             Primary Issue <span class="text-danger">*</span>
                         </label>
@@ -1597,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="scope_change">Repair Scope Changed</option>
                             <option value="other">Other Reason</option>
                         </select>
-                    </div>
+                    </div> --}}
 
                 </div>
                 <div class="modal-footer">
@@ -1860,6 +1814,346 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 @endif
+
+
+
+{{-- Unsuccessful Notes Modal --}}
+@if($request->status == 'unsuccessful' && $request->unsuccessful_notes && $userRole !== 'customer')
+<div class="modal fade" id="unsuccessfulNotesModal" tabindex="-1" aria-labelledby="unsuccessfulNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="unsuccessfulNotesModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>Unsuccessful Repair Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <div class="d-flex">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">Repair Unsuccessful - Complete Details</h6>
+                            <p class="mb-0">This repair could not be completed successfully. Below are the detailed reasons.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-danger mb-3">
+                            <i class="fas fa-clipboard-list me-2"></i>Reason for Unsuccessful Repair
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <p class="mb-0" style="white-space: pre-line;">{{ $request->unsuccessful_notes }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if($request->unsuccessful_reason)
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-danger mb-3">
+                            <i class="fas fa-tag me-2"></i>Primary Issue Category
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                @php
+                                    $reasonLabels = [
+                                        'parts_unavailable' => 'Parts Not Available',
+                                        'technical_complexity' => 'Technical Complexity',
+                                        'cost_prohibitive' => 'Cost Prohibitive',
+                                        'further_damage' => 'Risk of Further Damage',
+                                        'obsolete_device' => 'Device Obsolete',
+                                        'other' => 'Other Reason'
+                                    ];
+                                @endphp
+                                {{ $reasonLabels[$request->unsuccessful_reason] ?? $request->unsuccessful_reason }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                @if($request->recommendation)
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-info mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>Recommendations to Customer
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <p class="mb-0" style="white-space: pre-line;">{{ $request->recommendation }}</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-user-cog me-2"></i>Technician Information
+                                </h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-user text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Marked as Unsuccessful by</div>
+                                        <div class="fw-bold">{{ $request->technician->name ?? 'Technician' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-calendar me-2"></i>Timeline
+                                </h6>
+                                @if($request->unsuccessful_at)
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-clock text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Marked Unsuccessful</div>
+                                        <div class="fw-bold small">{{ $request->unsuccessful_at->format('M j, Y g:i A') }}</div>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Details
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Assessment Notes Modal --}}
+@if(!empty($request->assessment_notes) && $userRole !== 'customer')
+<div class="modal fade" id="assessmentNotesModal" tabindex="-1" aria-labelledby="assessmentNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="assessmentNotesModalLabel">
+                    <i class="fas fa-sticky-note me-2"></i>Assessment Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="alert alert-info">
+                    <div class="d-flex">
+                        <i class="fas fa-info-circle fa-2x me-3 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">Assessment Notes Available</h6>
+                            <p class="mb-0">Below are the detailed assessment notes for this job card.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-info mb-3">
+                            <i class="fas fa-clipboard-list me-2"></i>Assessment Notes
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <p class="mb-0" style="white-space: pre-line;">{{ $request->assessment_notes }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if(!empty($request->recommendation))
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-info mb-3">
+                            <i class="fas fa-lightbulb me-2"></i>Recommendations
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <p class="mb-0" style="white-space: pre-line;">{{ $request->recommendation }}</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-user-cog me-2"></i>Technician Information
+                                </h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-user text-info"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Assessment made by</div>
+                                        <div class="fw-bold">{{ $request->helpDesk->name ?? 'Helpdesk Team' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-calendar me-2"></i>Timeline
+                                </h6>
+                                @if($request->assessed_at)
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-clock text-info"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Assessment Date</div>
+                                        <div class="fw-bold small">{{ $request->assessed_at->format('M j, Y g:i A') }}</div>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-outline-info" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Details
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Sent Back Notes Modal --}}
+@if(!empty($request->sent_back_notes) && $userRole !== 'customer')
+<div class="modal fade" id="sentBackNotesModal" tabindex="-1" aria-labelledby="sentBackNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="sentBackNotesModalLabel">
+                    <i class="fas fa-undo-alt me-2"></i>Sent Back Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-warning border-0">
+                    <div class="d-flex">
+                        <i class="fas fa-info-circle fa-2x me-3 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">This request was sent back for revision or clarification.</h6>
+                            <p class="mb-0">Below are the details and notes from the sender.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Notes Content --}}
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-warning mb-3">
+                            <i class="fas fa-comment-dots me-2"></i>Sent Back Notes
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <p class="mb-0" style="white-space: pre-line;">{{ $request->sent_back_notes }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Optional Recommendation --}}
+                @if($request->sent_back_reason)
+                <div class="card border-0 bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-warning mb-3">
+                            <i class="fas fa-tag me-2"></i>Reason for Sent Back
+                        </h6>
+                        <div class="bg-white p-3 rounded border">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                                {{ ucfirst(str_replace('_', ' ', $request->sent_back_reason)) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Technician + Timeline --}}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-user-edit me-2"></i>Sent Back By
+                                </h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-user text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Marked as Sent Back by</div>
+                                        <div class="fw-bold">{{ $request->technician->name ?? 'Technician' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($request->sent_back_at)
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-muted mb-3">
+                                    <i class="fas fa-calendar me-2"></i>Timeline
+                                </h6>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-clock text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-muted small">Sent Back On</div>
+                                        <div class="fw-bold small">{{ $request->sent_back_at->format('M j, Y g:i A') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-outline-warning" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Notes
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endif
+
 
 
 <script>
