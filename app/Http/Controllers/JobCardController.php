@@ -116,7 +116,7 @@ public function updateStatus(Request $request, $id)
     $jobCard = ServiceRequest::findOrFail($id);
 
     // If user is technician, check if they are assigned to this job card
-    if ($roleName === 'technician' && $jobCard->technician_id !== $user->id) {
+    if ($roleName == 'technician' && $jobCard->technician_id !== $user->id) {
         abort(403, 'You are not authorized to update this job card.');
     }
 

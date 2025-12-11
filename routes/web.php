@@ -17,11 +17,11 @@ use App\Http\Controllers\NotificationController;
 
 
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/', function () {
-//         return view('dashboard');
-//     })->name('dashboard');
-// });
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
 
 
 Route::middleware(['auth'])->group(function () {
